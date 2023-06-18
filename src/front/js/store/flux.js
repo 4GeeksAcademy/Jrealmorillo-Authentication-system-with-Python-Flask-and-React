@@ -1,31 +1,16 @@
+
 const getState = ({ getStore, getActions, setStore }) => {
 	return {
 		store: {
-			message: null,
-
-			user: { 
-				email: "", 
-				password: "" 
-			},
-
-			users: [],
-		
-				
-			
+			token: null,
 		},
 		actions: {
-			// Use getActions to call a function within a fuction
-			exampleFunction: () => {
-				getActions().changeColor(0, "green");
-			},
-
-
 
 			getNewUser: (email, password) => {
 
-				const newUser = {
+				let newUser = {
 					email: email,
-					password: password
+					password: password,
 				}
 
 				fetch(process.env.BACKEND_URL + "/api/signup", {
@@ -35,76 +20,78 @@ const getState = ({ getStore, getActions, setStore }) => {
 					},
 					body: JSON.stringify(newUser)
 				})
-				.then((response) => {
-					if (!response.ok) {
-						throw new Error("Error HTTP: " + response.status)
-					}
-					return response.json()
+					.then((response) => {
+						if (!response.ok) {
+							throw new Error("Error HTTP: " + response.status)
+						}
+						return response.json()
 					})
-				.then(data => {
-					
-					setStore({ user: { email: data.user.email, password: data.user.password } });
-				} )
-				.catch(error => console.log(error))
+					.then(data => {
+						setStore({ token: data.token, user: data.user });
+						sessionStorage.setItem("token", data.token);
+
+					})
+					.catch(error => console.log(error))
 			},
 
-			checkUser: (email, password) => {
 
-				const user = {
-					email: email,
-					password: password
-				}
+			logInUser: async (email, password) => {
+				try {
+					const response = await fetch(process.env.BACKEND_URL + "/api/login", {
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json"
+						},
+						body: JSON.stringify({
+							email: email,
+							password: password,
+						})
+					});
 
-				fetch(process.env.BACKEND_URL + "/api/login", {
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json"
-					},
-					body: JSON.stringify(user)
-				})
-				.then((response) => {
-					if(!response.ok) {
-						throw new Error("Error HTTP: " + response.status)
+					if (response.status === 200) {
+						const data = await response.json();
+						setStore({ token: data.token, user: data.user });
+						sessionStorage.setItem("token", data.token);
+						return true;
+					} else {
+						return false;
 					}
-					return response.json()
-				})
-				.then(data => {
-					setStore({ user: {email: data.user.mail, password: data.user.password}});
-				})
-				.catch(error => console.log(error))
+				} catch (error) {
+					console.error("error", error);
+					return false;
+				}
 			},
 
-			changeColor: (index, color) => {
-				//get the store
+			logOutUser: () => {
+				sessionStorage.removeItem("token")
+				setStore({ token: null })
+			},
+
+			checkUser: () => {
 				const store = getStore();
+				const opts = {
+					method: "GET",
+					headers: {
+						"Authorization": "Bearer " + store.token
+					}	
+				};
+				fetch(process.env.BACKEND_URL + "/api/private", opts)
+					.then(response => {
+						if (!response.ok) {
+							throw new Error("Error HTTP: " + response.status);
+						}
+						return response.json();
+					})
+					.then(data => setStore({ token: data.token }))
+					.catch(error => console.log("Error", error));
+			},
 
-				//we have to loop the entire demo array to look for the respective index
-				//and change its color
-				const demo = store.demo.map((elm, i) => {
-					if (i === index) elm.background = color;
-					return elm;
-				});
-
-				//reset the global store
-				setStore({ demo: demo });
-			}
 		}
-	};
-};
+	}
+}
+
 
 export default getState;
 
 
 
-			// getMessage: async () => {
-			// 	try{
-			// 		// fetching data from the backend
-			// 		const resp = await fetch(process.env.BACKEND_URL + "/api/hello")
-			// 		const data = await resp.json()
-			// 		setStore({ message: data.message })
-			// 		// don't forget to return something, that is how the async resolves
-			// 		return data;
-			// 	}catch(error){
-			// 		console.log("Error loading message from backend", error)
-			// 	}
-			// },
