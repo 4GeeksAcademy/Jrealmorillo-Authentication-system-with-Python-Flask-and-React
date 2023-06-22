@@ -9,41 +9,68 @@ from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identi
 
 api = Blueprint('api', __name__)
 
+#//////////////////////////////////// VIDEOOOOOOOOOOOOOOOOOOOO
 
 @api.route('/signup', methods=['POST'])
 def signup_user():
-    data = request.get_json()
-    user = User(email=data['email'], password=data['password'])
+    email = request.json["email"]
+    password = request.json["password"]
 
-    if not user.email or not user.password:
-        return jsonify({'message': 'Email and password are required'}), 400
-    
-    if user:
-        db.session.add(user)
-        db.session.commit()
+    user_exists = User.query.filter_by(email=email).first() is not None
 
-    token = create_access_token(identity=user.id)
+    if user_exists:
+        return jsonify({'error': 'User already exists'}), 400
 
-    return jsonify({"user":user.serialize(), "token": token}), 200
+    new_user = User(email=email, password=password)
+    db.session.add(new_user)
+    db.session.commit()
 
+    token = create_access_token(identity=new_user.id)
+
+    return jsonify({
+        "id": new_user.id,
+        "email": new_user.email,
+        "token": token
+    })
+
+
+#//////////////////////////////////// VIDEOOOOOOOOOOOOOOOOOOOO
 
 @api.route('/login', methods=['POST'])
 def login_user():
-    data = request.get_json()
-    user = User.query.filter_by(email=data['email'], password=data['password']).first()
+    email = request.json["email"]
+    password = request.json["password"]
+
+    user = User.query.filter_by(email=email, password=password).first()
+
+    if user is None:
+        return jsonify({'error': 'Unauthorized'}), 400
+
     token = create_access_token(identity=user.id)
 
-    return jsonify({"message": "el usuario se ha logeado con éxito", "user": user.serialize(), "token": token})
+    return jsonify({"message": "el usuario se ha logeado con éxito",
+                    "id": user.id,
+                    "email": user.email,
+                    "token": token
+                    })
 
+#//////////////////////////////////// VIDEOOOOOOOOOOOOOOOOOOOO
 
 @api.route('/private', methods=['GET'])
 @jwt_required()
 def private_user():
     user_id = get_jwt_identity()
-    user = User.query.get(user_id)
 
-    return jsonify({"message": "el usuario es correcto", "user": user.serialize()})
+    if not user_id:
+        return jsonify({'error': 'Unauthorized'}), 400
+    
+    # user = User.query.get(user_id)
+    user = User.query.filter_by(id=user_id).first()
 
+    return jsonify({"message": "el usuario es correcto",                     
+                    "id": user.id,
+                    "email": user.email
+                    })
 
 if __name__ == '__main__':
     api.run()
@@ -51,6 +78,36 @@ if __name__ == '__main__':
 
 
 
+# @api.route('/', methods=['POST'])
+# def signup_user():
+#     data = request.get_json()
+#     user = User(email=data['email'], password=data['password'])
+
+#     if not user.email or not user.password:
+#         return jsonify({'message': 'Email and password are required'}), 400
+
+#     if user:
+#         db.session.add(user)
+#         db.session.commit()
+
+#     token = create_access_token(identity=user.id)
+
+#     return jsonify({"user":user.serialize(), "token": token}), 200
 
 
+# @api.route('/login', methods=['POST'])
+# def login_user():
+#     data = request.get_json()
+#     user = User.query.filter_by(email=data['email'], password=data['password']).first()
+#     token = create_access_token(identity=user.id)
 
+#     return jsonify({"message": "el usuario se ha logeado con éxito", "user": user.serialize(), "token": token})
+
+
+# @api.route('/private', methods=['GET'])
+# @jwt_required()
+# def private_user():
+#     user_id = get_jwt_identity()
+#     user = User.query.get(user_id)
+
+#     return jsonify({"message": "el usuario es correcto", "user": user.serialize()})

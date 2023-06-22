@@ -8,7 +8,7 @@ export const Login = () => {
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
 
-    const { store, actions } = useContext(Context)
+    const { actions } = useContext(Context)
 
     const navigate = useNavigate()
 
@@ -73,6 +73,16 @@ export const Login = () => {
                         </div>
                     </div>
                 </form>
+                <div className="row d-flex justify-content-center m-5 p-5">
+                    <div className="col-16 d-flex justify-content-center">
+                        <p> Not yet registered? Please create an account first</p>
+                    </div>
+                    <div className="col-16 d-flex justify-content-center">
+                        <button type="button" className="btn btn-lg btn-primary fw-bold" onClick={() => navigate("/signup")}>
+                            Sign up
+                        </button>
+                    </div>
+                </div>
             </div>
             
         </div>

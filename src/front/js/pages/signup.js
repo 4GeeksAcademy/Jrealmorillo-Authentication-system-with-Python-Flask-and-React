@@ -15,8 +15,8 @@ export const Signup = () => {
     const navigate = useNavigate()
 
 
-    const handleNewUser = () => {
-        // event.preventDefault()
+    const handleNewUser = (event) => {
+        event.preventDefault()
         actions.getNewUser(email, password)
         navigate("/private")
     }

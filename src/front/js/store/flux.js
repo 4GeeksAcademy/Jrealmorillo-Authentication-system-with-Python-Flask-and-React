@@ -1,12 +1,15 @@
-
 const getState = ({ getStore, getActions, setStore }) => {
+
+
 	return {
 		store: {
 			token: null,
+			user: {}
 		},
 		actions: {
 
 			getNewUser: (email, password) => {
+				const store = getStore();
 
 				let newUser = {
 					email: email,
@@ -22,16 +25,16 @@ const getState = ({ getStore, getActions, setStore }) => {
 				})
 					.then((response) => {
 						if (!response.ok) {
+							alert("Login error, please go back & try again")
 							throw new Error("Error HTTP: " + response.status)
 						}
 						return response.json()
 					})
 					.then(data => {
-						setStore({ token: data.token, user: data.user });
+						setStore({ token: data.token, user: newUser });
 						sessionStorage.setItem("token", data.token);
-
 					})
-					.catch(error => console.log(error))
+					.catch(error => console.log(error));		
 			},
 
 
@@ -52,8 +55,10 @@ const getState = ({ getStore, getActions, setStore }) => {
 						const data = await response.json();
 						setStore({ token: data.token, user: data.user });
 						sessionStorage.setItem("token", data.token);
+						
 						return true;
 					} else {
+						alert("Login error, please go back & try again")
 						return false;
 					}
 				} catch (error) {
