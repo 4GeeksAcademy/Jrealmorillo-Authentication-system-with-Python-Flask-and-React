@@ -5,21 +5,18 @@ import { useNavigate } from "react-router-dom";
 export const Private = () => {
   const { store, actions } = useContext(Context);
   const navigate = useNavigate();
+  const token = store.user.token;
 
-  // useEffect(() => {
-  //     if(store.token && store.token !== "" && store.token !== undefined && store.token !== null) {
-  //       actions.checkUser()}
-  // }, [store.token])
 
   const handleLogout = () => {
-    actions.logOutUser()
+    actions.userLogOut()
     navigate("/");
   }
 
   return (
 
     <div className="private-container">
-      {store.token ? (
+      {token ? (
         <>
           <nav className="navbar navbar-expand-lg navbar-dark shadow-5-strong p-5">
             <div className="container-fluid justify-content-end">

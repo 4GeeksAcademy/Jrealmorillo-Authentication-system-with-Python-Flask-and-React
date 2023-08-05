@@ -15,10 +15,21 @@ export const Signup = () => {
     const navigate = useNavigate()
 
 
-    const handleNewUser = (event) => {
+    const handleNewUser = async (event) => {
         event.preventDefault()
-        actions.getNewUser(email, password)
-        navigate("/private")
+        try {
+            const success = await actions.userSignup(email, password);
+            if (success) {
+                alert("User created successfully, you can now log in")
+                navigate("/login");
+            }
+            else {
+                alert("Login error, please go back & try again")
+            }
+        }
+        catch (error) {
+            console.log("Error creating user", error);
+        }
     }
 
 

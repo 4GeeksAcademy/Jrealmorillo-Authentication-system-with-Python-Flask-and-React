@@ -13,13 +13,20 @@ export const Login = () => {
     const navigate = useNavigate()
 
 
-    const handleSubmit = (event) => {
+    const handleSubmit = async (event) => {
         event.preventDefault()
-        if (actions.logInUser(email, password)) {
-            navigate("/private")
+        try {
+            const success = await actions.userLogin(email, password)
+            if (success) {
+                navigate("/private")
+            }
+            else {
+                alert("User not logged in, please try again")
+            }
         }
-        else {
-            alert("User not logged in")
+        catch (error) {
+            console.log("Error logging in user", error);
+            alert("User not logged in, please try again")
         }
     }
     
@@ -28,7 +35,7 @@ export const Login = () => {
 
     return (
         <div className="login-container d-flex flex-column align-items-center justify-content-center">
-            <h2 className="d-flex justify-content-center pt-5">Nice to see you again!</h2>
+            <h2 className="d-flex justify-content-center pt-5">Nice to see you!</h2>
             <h2 className="d-flex justify-content-center m-2 p-2">Please enter your details to Log in</h2>
         
             <div className="container align-items-center">

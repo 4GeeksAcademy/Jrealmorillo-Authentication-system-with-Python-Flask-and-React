@@ -13,42 +13,48 @@ api = Blueprint('api', __name__)
 
 @api.route('/signup', methods=['POST'])
 def signup_user():
-    email = request.json["email"]
-    password = request.json["password"]
+    body = request.get_json()
 
-    user_exists = User.query.filter_by(email=email).first() is not None
+    if body is None:
+        raise APIException(
+            "You need to specify the request body as a json object", status_code=400)
 
-    if user_exists:
-        return jsonify({'error': 'User already exists'}), 400
+    if "email" not in body:
+        raise APIException('You need to specify the email', status_code=400)
 
-    new_user = User(email=email, password=password)
-    db.session.add(new_user)
+    if "password" not in body:
+        raise APIException('You need to specify the password', status_code=400)
+
+    user1 = User(email=body["email"], password=body["password"])
+    db.session.add(user1)
     db.session.commit()
 
-    token = create_access_token(identity=new_user.id)
-
-    return jsonify({
-        "id": new_user.id,
-        "email": new_user.email,
-        "token": token
-    })
+    return jsonify("user signup ok"), 200
 
 
 #//////////////////////////////////// VIDEOOOOOOOOOOOOOOOOOOOO
 
 @api.route('/login', methods=['POST'])
 def login_user():
-    email = request.json["email"]
-    password = request.json["password"]
+    body = request.get_json()
 
-    user = User.query.filter_by(email=email, password=password).first()
+    if body is None:
+        raise APIException(
+            "You need to specify the request body as a json object", status_code=400)
 
+    if "email" not in body:
+        raise APIException('You need to specify the email', status_code=400)
+
+    if "password" not in body:
+        raise APIException('You need to specify the password', status_code=400)
+
+    user = User.query.filter_by(email=body["email"], password=body["password"]).first()
     if user is None:
-        return jsonify({'error': 'Unauthorized'}), 400
-
+        raise APIException('User not found', status_code=404)
+        
     token = create_access_token(identity=user.id)
-
-    return jsonify({"message": "el usuario se ha logeado con éxito",
+        
+    return jsonify({"message": "User logged in successfully",
                     "id": user.id,
                     "email": user.email,
                     "token": token
@@ -60,17 +66,13 @@ def login_user():
 @jwt_required()
 def private_user():
     user_id = get_jwt_identity()
-
-    if not user_id:
-        return jsonify({'error': 'Unauthorized'}), 400
+    user = User.query.get(user_id)
+    token = create_access_token(identity=user.id)
     
-    # user = User.query.get(user_id)
-    user = User.query.filter_by(id=user_id).first()
-
-    return jsonify({"message": "el usuario es correcto",                     
-                    "id": user.id,
-                    "email": user.email
-                    })
+    return jsonify({"id": user.id,
+                    "email": user.email,
+                    "token": token,
+                    }), 200
 
 if __name__ == '__main__':
     api.run()
